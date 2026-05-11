@@ -1,0 +1,100 @@
+---
+author:
+  - name: Keion D. Vergara
+    email: keion.vergara@yotes.collegeofidaho.edu
+    phone: +1 986 837 0545
+    affiliations: 
+      - ref: coi1
+      - ref: coi2
+  - name: Paul Moulton
+    email: pmoulton@collegeofidaho.edu
+    affiliations: 
+      - id: coi1
+        name: The College of Idaho
+        department: Department of Music
+        town: Caldwell
+    note: Independent Study Advisor
+  - name: Eric M. Friedlander
+    email: efriedlander@collegeofidaho.edu
+    affiliations: 
+      - id: coi2
+        name: The College of Idaho
+        department: Department of Computer Science
+        town: Caldwell
+    note: Independent Study Advisor
+        
+title: Mapping Meaning in Lyrics
+title-short: An _achemso_ demo
+keywords: American Chemical Society, LaTeX
+abstract: |
+  This paper presents an exploratory workflow for mapping semantic structure in song lyrics using sentence embeddings. The project combines Spotify Global Top 50 snapshots, track metadata, and lyric text to build a unified corpus for analysis. Lyrics are encoded with a multilingual sentence-transformer model, then projected with PCA and UMAP and grouped with K-means clustering to reveal broad thematic neighborhoods. The resulting representation is designed to support both visual inspection and coarse thematic comparison across markets. In the current draft, the main contribution is the pipeline itself: a reproducible way to join chart data with lyric text and turn it into an interpretable embedding space for downstream analysis. 
+bibliography: bibliography.bib
+format:
+  acs-pdf:
+    journal:
+      id: jacsat  #This is an identifier for the target journal: from https://pubs.acs.org/, the identifier is the part of the URL after https://pubs.acs.org/journal/, e.g. for J. Org. Chem. it would be joceah.
+      type: article  #article, note, communication, review, letter, or perspectivee
+      layout: traditional #traditional or twocolumn, twocolumn currently broken for longtables
+      hide-email: false # if enabled, hides email addresses (and fax/phone)
+      abbreviations: IR,NMR,UV
+  acs-html: default
+---
+
+
+
+## Introduction
+
+Song lyrics are a compact but information-rich form of language. They combine narrative, emotion, repetition, and cultural references in a format that is easy to collect at scale but difficult to interpret automatically. Traditional text analysis can measure word frequency or surface topics, but those approaches often miss the relational structure that gives lyrics meaning. Sentence embeddings offer a stronger alternative because they represent whole lyric passages as vectors whose geometry reflects semantic similarity.
+
+The goal of this project is to map meaning in lyrics for songs that appear in Spotify Global Top 50 playlists. Rather than asking whether a song is popular, the analysis asks whether songs that circulate together across countries also occupy similar semantic regions in lyric space. That distinction matters. Chart position captures consumption behavior, while lyric embeddings provide a view into the textual content that may help explain why some songs travel well across markets and others remain localized.
+
+This draft focuses on three questions. First, can chart-linked lyric data be assembled into a consistent cross-country corpus? Second, do multilingual sentence embeddings produce a meaningful structure for comparing songs at scale? Third, do unsupervised clusters reveal recurring lyrical neighborhoods that can be interpreted across national playlists? The paper is structured in IMRAD format so the final version can expand naturally as the analysis matures.
+
+## Methods
+
+### Data collection and alignment
+
+The workspace contains monthly Spotify Global 50 snapshots for 10 months, spanning November 2022 through August 2023. The metadata files include playlist identifiers, playlist names, track identifiers, track names, popularity scores, and extraction dates. In parallel, lyric files store lyric text for the matched tracks. The combined metadata corpus contains 513,883 rows across 67 playlists, and the lyric tables contain 25,600 rows. Joining the metadata and lyric tables by `track.id` yields a much larger row-level panel because the same track can appear in multiple playlists and across multiple days. After alignment, the merged corpus covers 9,410 unique tracks.
+
+Lyrics were gathered through the project's lyric acquisition workflow and paired with Spotify metadata so that each text instance could be analyzed in context. This pairing is important because the meaning of a lyric is not separated from its circulation. A track that appears in several national charts can be studied both as text and as a cultural artifact moving through different audiences.
+
+### Text representation
+
+Each lyric text was encoded with `paraphrase-multilingual-MiniLM-L12-v2`, a multilingual sentence-transformer model. This choice is appropriate for a global chart dataset because it can represent lyrics in multiple languages and can capture similarity across short passages without requiring manual feature engineering. The embedding vector for each song serves as the primary analysis object.
+
+The final saved analysis set contains 23,416 embedded song instances. That set is large enough to support unsupervised structure discovery while still allowing manual inspection of representative songs and cluster centroids. The embeddings are stored in a pickle file so the downstream analysis can be repeated without rerunning the full encoding step.
+
+### Dimensionality reduction and clustering
+
+To make the embedding space interpretable, the project uses two complementary reductions. PCA provides a linear projection that is useful for stable global structure, while UMAP is used for a nonlinear neighborhood view. UMAP is configured with cosine distance because the embeddings are directional vectors and similarity is better expressed by angle than by raw Euclidean distance.
+
+For unsupervised grouping, the project uses K-means clustering with six clusters. The cluster count was chosen as a pragmatic exploratory setting rather than as a claim about the true number of lyric themes. Cluster centers are paired with the nearest actual songs to identify representative examples for each region of the space.
+
+## Results
+
+The assembled corpus shows that lyric-driven chart analysis is feasible at scale. The data pipeline successfully connects Spotify metadata to lyric text, and the resulting embedding matrix supports both visualization and clustering. In the saved embeddings notebook, the analysis proceeds with a full set of 23,416 songs and produces a two-dimensional semantic map from the lyric vectors.
+
+The K-means solution with six clusters yields coherent but not perfectly separated regions. Cluster dominance analysis suggests that some regions are strongly associated with a single playlist or market, while others are more mixed. In the current notebook outputs, the dominant playlist shares are approximately 48.8 percent for Morocco in one cluster, 21.0 percent for India in another, and smaller leading shares for Hong Kong, Indonesia, Greece, and Chile in the remaining clusters. That pattern suggests that the embedding space is not merely partitioning by country, but it is also not fully country-agnostic. Instead, it reflects a blend of lyrical similarity and chart composition.
+
+Qualitative inspection of the cluster representatives indicates that the nearest songs to each centroid can serve as useful labels for the region of the space. This supports the idea that centroid songs are acting as semantic anchors, summarizing the dominant lyrical style within a cluster. In practice, the map is most useful when the cluster structure is read together with the underlying song titles, playlist names, and lyric snippets.
+
+The visualizations also show that the song space is broad and overlapping rather than cleanly segmented. That overlap is expected for popular music, where recurring themes such as love, confidence, heartbreak, nostalgia, and nightlife can appear across many languages and genres. The value of the embedding approach is therefore not in creating hard category boundaries, but in revealing the degree of separation between lyrical neighborhoods.
+
+## Discussion
+
+The main result of this project is methodological: a reproducible pipeline can turn a multinational chart dataset into an interpretable semantic map of lyrics. The combination of multilingual embeddings and unsupervised clustering makes it possible to compare songs across markets without relying on a hand-built taxonomy. This is useful because global streaming charts are messy, multilingual, and highly repetitive. A standard bag-of-words approach would be too shallow for that setting.
+
+At the same time, the analysis has clear limits. Chart data is dominated by platform behavior, release timing, and regional promotion, so cluster membership should not be mistaken for a pure statement about lyrical meaning. Repetition in hooks and choruses can also distort the embedding signal, especially when songs are short or heavily stylized. UMAP is valuable for visualization, but its geometry should not be overinterpreted as a direct map of meaning. K-means, likewise, imposes spherical partitions on a space that is unlikely to be spherical.
+
+Even with those limits, the project gives a practical foundation for studying music as text. It can be extended in several directions. The current workflow could be strengthened by better lyric cleaning, explicit language detection, genre-aware controls, and temporal comparisons across monthly snapshots. A later version could also add human annotation so that the discovered clusters are evaluated against a ground truth of lyrical themes.
+
+The broader implication is that lyrics can be analyzed at the level of semantic similarity rather than only surface words. That shift makes it easier to ask whether songs travel globally because they share themes, because they match local tastes, or because platform dynamics push them together. This paper is a first step toward answering that question.
+
+## Conclusion
+
+This draft establishes the core IMRAD structure for the project and documents the current lyric-embedding pipeline. The workspace now supports a full analysis flow from Spotify metadata and lyric acquisition to vector encoding, visualization, and clustering. The immediate next step is to turn the exploratory findings into a tighter results narrative with explicit figures, labeled clusters, and a more formal comparison across markets.
+
+## References
+
+:::{#refs}
+:::

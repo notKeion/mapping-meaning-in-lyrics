@@ -7,7 +7,7 @@ Using https://www.kaggle.com/datasets/bwandowando/daily-spotify-top-50-of-60-cou
 
 
 ## Create Enviornment (Only Once)
-`mamba create -n MMIL python=3.10`
+`mamba create -n MMIL python=3.14`
 
 ## Open Enviornment
 `eval "$(mamba shell hook --shell zsh)" && mamba activate MMIL`
